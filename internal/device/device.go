@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type Command interface {
+	GetResponse() any
+	GetCommand() string
+}
+
 type Device struct {
 	IP   string
 	Port string

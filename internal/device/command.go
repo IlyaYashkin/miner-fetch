@@ -1,10 +1,5 @@
 package device
 
-type Command interface {
-	GetResponse() any
-	GetCommand() string
-}
-
 type VersionCommand struct {
 	Response VersionResponse
 }

@@ -10,7 +10,7 @@ func (h *Handler) AuthMiddleware(next bot.HandlerFunc) bot.HandlerFunc {
 	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
 		fromUsername := update.Message.From.Username
 
-		for _, username := range h.Config.TelegramAdminUsernames {
+		for _, username := range h.cfg.TgAdminUsernames {
 			if fromUsername == username {
 				next(ctx, b, update)
 				return

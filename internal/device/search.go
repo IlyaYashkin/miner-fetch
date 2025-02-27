@@ -3,6 +3,7 @@ package device
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Ullaakut/nmap/v3"
 	"log"
@@ -12,11 +13,7 @@ import (
 	"time"
 )
 
-type Scanner interface {
-	Scan(ctx context.Context) ([]Device, error)
-}
-
-func GetRustScanScanner() Scanner {
+func GetRustScanScanner() *RustScanScanner {
 	return &RustScanScanner{}
 }
 
@@ -58,7 +55,7 @@ func (r RustScanScanner) Scan(ctx context.Context) ([]Device, error) {
 
 type NmapScanner struct{}
 
-func GetNmapScanner() Scanner {
+func GetNmapScanner() *NmapScanner {
 	return &NmapScanner{}
 }
 
@@ -97,7 +94,7 @@ L:
 	}
 
 	if len(*warnings) > 0 {
-		log.Printf("run finished with warnings: %s\n", *warnings)
+		return []Device{}, errors.New(fmt.Sprintf("run finished with warnings: %s\n", *warnings))
 	}
 	if err != nil {
 		return []Device{}, err
@@ -124,7 +121,7 @@ L:
 
 type MockScanner struct{}
 
-func GetMockScanner() Scanner {
+func GetMockScanner() *MockScanner {
 	return &MockScanner{}
 }
 

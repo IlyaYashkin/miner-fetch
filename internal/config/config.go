@@ -6,18 +6,31 @@ import (
 )
 
 type Config struct {
-	TelegramAPIKey         string
-	TelegramAdminUsernames []string
+	TgAPIKey         string   `json:"tg_api_key"`
+	TgAdminUsernames []string `json:"tg_admin_usernames"`
+	Mode             string   `json:"mode"`
+	IsScanner        bool     `json:"is_scanner"`
+	Port             string   `json:"port"`
+	ParentAuthority  string   `json:"parent_authority"`
 }
 
 func GetConfig() Config {
-	telegramApiKey := flag.String("telegram-api-key", "", "Telegram API Key")
-	telegramAdminUsernames := flag.String("telegram-admin-usernames", "", "Telegram admin usernames")
+	tgApiKey := flag.String("tg-api-key", "", "Telegram API Key")
+	tgAdminUsernames := flag.String("tg-admin-usernames", "", "Telegram admin usernames")
+	mode := flag.String("mode", "parent", "Mode")
+	noScan := flag.Bool("no-scan", false, "Scan mode")
+	port := flag.String("port", "8080", "Port")
+	parentAuthority := flag.String("parent-authority", "", "Parent authority")
+
 	flag.Parse()
 
 	return Config{
-		TelegramAPIKey:         *telegramApiKey,
-		TelegramAdminUsernames: prepareUsernames(*telegramAdminUsernames),
+		TgAPIKey:         *tgApiKey,
+		TgAdminUsernames: prepareUsernames(*tgAdminUsernames),
+		Mode:             *mode,
+		IsScanner:        !*noScan,
+		Port:             *port,
+		ParentAuthority:  *parentAuthority,
 	}
 }
 

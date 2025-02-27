@@ -1,7 +1,15 @@
 package main
 
-import "miner-fetch/internal/app"
+import (
+	"miner-fetch/internal/app"
+)
 
 func main() {
-	app.Start()
+	a := app.NewApp()
+
+	a.Start()
+
+	a.HandleShutdown()
+
+	a.Stop()
 }

@@ -5,47 +5,75 @@ import (
 	"fmt"
 	"log"
 	"miner-fetch/internal/config"
+	"miner-fetch/internal/runner"
 	"miner-fetch/internal/service"
-	"miner-fetch/internal/storage"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 )
 
-func Start() {
+type Runner interface {
+	Start()
+	Stop()
+	GetName() string
+}
+
+type App struct {
+	runners []Runner
+}
+
+func NewApp() *App {
+	app := &App{}
+
 	cfg := config.GetConfig()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
+	ctx := context.Background()
 
-	services := []func(
-		ctx context.Context,
-		wg *sync.WaitGroup,
-		storage *storage.Storage,
-		cfg config.Config,
-	){
-		service.TelegramBotService,
-		service.DeviceScannerService,
-	}
-	store := &storage.Storage{}
-
-	for _, srv := range services {
-		wg.Add(1)
-		go srv(ctx, &wg, store, cfg)
+	s := &service.Service{
+		Device:  service.NewDevice(),
+		Polling: service.NewPolling(),
+		Logger:  service.NewLogger(),
 	}
 
+	commonRunner := runner.NewCommonRunner(ctx, s, cfg)
+
+	if cfg.IsScanner {
+		app.runners = append(app.runners, runner.NewDeviceScanner(commonRunner))
+	}
+
+	if cfg.Mode == "parent" {
+		app.runners = append(app.runners, runner.NewTelegramBot(commonRunner))
+		app.runners = append(app.runners, runner.NewHttpServer(commonRunner))
+	} else if cfg.Mode == "child" {
+		app.runners = append(app.runners, runner.NewPoller(commonRunner))
+	}
+
+	app.runners = append(app.runners, runner.NewLogger(commonRunner))
+
+	return app
+}
+
+func (a *App) Start() {
+	for _, r := range a.runners {
+		r.Start()
+	}
+}
+
+func (a *App) HandleShutdown() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	<-sigChan
+}
 
+func (a *App) Stop() {
 	fmt.Println()
-	log.Println("Shutting down...")
+	log.Printf("Shutting down...")
 
-	cancel()
+	for _, r := range a.runners {
+		log.Printf("Stopping service '%s'...\n", r.GetName())
+		r.Stop()
+	}
 
-	wg.Wait()
-
-	log.Println("All services are stopped")
+	log.Println("All runners are stopped")
 }
