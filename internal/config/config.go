@@ -14,6 +14,9 @@ type Config struct {
 	ParentAuthority  string   `json:"parent_authority"`
 	NodeName         string   `json:"node_name"`
 	AuthKey          string   `json:"auth_key"`
+	TlsMode          bool     `json:"tls_mode"`
+	CertPath         string   `json:"cert_path"`
+	PrivateKeyPath   string   `json:"private_key_path"`
 }
 
 func GetConfig() Config {
@@ -25,6 +28,9 @@ func GetConfig() Config {
 	parentAuthority := getEnv("PARENT_AUTHORITY", "")
 	nodeName := getEnv("NODE_NAME", "Unknown")
 	authKey := getEnv("AUTH_KEY", "")
+	tlsMode := getEnv("TLS_MODE", "true")
+	certPath := getEnv("CERT_PATH", "")
+	privateKeyPath := getEnv("PRIVATE_KEY_PATH", "")
 
 	return Config{
 		TgAPIKey:         tgApiKey,
@@ -35,6 +41,9 @@ func GetConfig() Config {
 		ParentAuthority:  parentAuthority,
 		NodeName:         nodeName,
 		AuthKey:          authKey,
+		TlsMode:          tlsMode == "true",
+		CertPath:         certPath,
+		PrivateKeyPath:   privateKeyPath,
 	}
 }
 

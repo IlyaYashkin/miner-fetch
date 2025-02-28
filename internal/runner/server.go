@@ -43,8 +43,16 @@ func (h *HttpServer) Start() {
 		}
 
 		go func() {
-			if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-				log.Fatal(err)
+			var err error
+
+			if h.cfg.TlsMode {
+				err = server.ListenAndServeTLS(h.cfg.CertPath, h.cfg.PrivateKeyPath)
+			} else {
+				err = server.ListenAndServe()
+			}
+
+			if !errors.Is(err, http.ErrServerClosed) {
+				log.Fatal("http server error: ", err)
 			}
 		}()
 
