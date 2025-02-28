@@ -30,9 +30,10 @@ func NewApp() *App {
 	ctx := context.Background()
 
 	s := &service.Service{
-		Device:  service.NewDevice(),
-		Polling: service.NewPolling(),
-		Logger:  service.NewLogger(),
+		Device:         service.NewDevice(),
+		Polling:        service.NewPolling(),
+		Logger:         service.NewLogger(),
+		TelegramSender: service.NewTelegramSender(),
 	}
 
 	commonRunner := runner.NewCommonRunner(ctx, s, cfg)
@@ -71,7 +72,7 @@ func (a *App) Stop() {
 	log.Printf("Shutting down...")
 
 	for _, r := range a.runners {
-		log.Printf("Stopping service '%s'...\n", r.GetName())
+		log.Printf("Stopping runner '%s'...\n", r.GetName())
 		r.Stop()
 	}
 

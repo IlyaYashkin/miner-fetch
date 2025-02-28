@@ -5,12 +5,21 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"miner-fetch/internal/handler/api"
+	"miner-fetch/internal/service"
 	"net/http"
 	"time"
 )
+
+type transportWithAuth struct {
+	token string
+}
+
+func (t *transportWithAuth) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "ApiKey "+t.token)
+	return http.DefaultTransport.RoundTrip(req)
+}
 
 type Poller struct {
 	CommonRunner
@@ -26,7 +35,8 @@ func NewPoller(runner CommonRunner) *Poller {
 
 func (p *Poller) Start() {
 	go func() {
-		client := &http.Client{}
+		transport := transportWithAuth{p.cfg.AuthKey}
+		client := &http.Client{Transport: &transport}
 
 	L:
 		for {
@@ -35,19 +45,18 @@ func (p *Poller) Start() {
 				p.stopCh <- true
 				break L
 			default:
-				command, err := p.pollRequest(p.ctx, client)
+				payload, err := p.pollRequest(p.ctx, client)
 
 				if err != nil {
 					p.s.Logger.Log(err)
 				}
 
-				if command != "" {
-					message, err := p.s.Device.ExecuteCommand(command)
+				if payload.Command != "" {
+					message, err := p.s.Device.ExecuteCommand(payload.Command)
 					if err != nil {
 						p.s.Logger.Log(err)
 					} else {
-						fmt.Println(message)
-						err := p.telegramSendRequest(p.ctx, client, message)
+						err := p.telegramSendRequest(p.ctx, client, payload.ChatID, message)
 						if err != nil {
 							p.s.Logger.Log(err)
 						}
@@ -67,46 +76,50 @@ func (p *Poller) GetName() string {
 func (p *Poller) pollRequest(
 	ctx context.Context,
 	client *http.Client,
-) (string, error) {
+) (service.Payload, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, p.cfg.ParentAuthority+"/api/poll", nil)
 	if err != nil {
-		return "", err
+		return service.Payload{}, err
 	}
 
 	resp, err := client.Do(req)
 	if resp != nil && resp.StatusCode == http.StatusRequestTimeout {
-		return "", nil
+		return service.Payload{}, nil
 	}
 
 	if err != nil {
-		return "", err
+		return service.Payload{}, err
 	}
 
 	if resp == nil {
-		return "", errors.New("nil response")
+		return service.Payload{}, errors.New("nil response")
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return service.Payload{}, err
 	}
+
+	payload := service.Payload{}
+	err = json.Unmarshal(body, &payload)
 
 	err = resp.Body.Close()
 	if err != nil {
-		return "", err
+		return service.Payload{}, err
 	}
 
-	return string(body), nil
+	return payload, nil
 }
 
 func (p *Poller) telegramSendRequest(
 	ctx context.Context,
 	client *http.Client,
+	chatID int64,
 	message string,
 ) error {
 	body := api.TelegramSendBody{
-		ChatID:  123123,
-		Sender:  "LOPATINA",
+		ChatID:  chatID,
+		Sender:  p.cfg.NodeName,
 		Message: message,
 	}
 

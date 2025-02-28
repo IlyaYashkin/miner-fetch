@@ -20,7 +20,7 @@ func NewHandler(s *service.Service, cfg config.Config) *Handler {
 	}
 }
 
-func (h *Handler) Start(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *Handler) Start(ctx context.Context, b *bot.Bot, _ *models.Update) {
 	commands := []models.BotCommand{
 		{Command: "start", Description: "Запустить бота"},
 		{Command: "info", Description: "Получить информацию"},
@@ -31,21 +31,21 @@ func (h *Handler) Start(ctx context.Context, b *bot.Bot, update *models.Update) 
 	}
 }
 
-func (h *Handler) Info(ctx context.Context, b *bot.Bot, update *models.Update) {
+func (h *Handler) Info(ctx context.Context, _ *bot.Bot, update *models.Update) {
 	if h.cfg.IsScanner {
 		text, err := h.s.Device.GetDevicesInfo()
 		if err != nil {
 			h.s.Logger.Log(err)
 		}
 
-		_, err = b.SendMessage(ctx, &bot.SendMessageParams{
-			ChatID: update.Message.Chat.ID,
-			Text:   text,
-		})
+		err = h.s.TelegramSender.SendMessage(ctx, update.Message.Chat.ID, h.cfg.NodeName, text)
 		if err != nil {
 			h.s.Logger.Log(err)
 		}
 	}
 
-	h.s.Polling.Send("info")
+	h.s.Polling.Send(service.Payload{
+		Command: "info",
+		ChatID:  update.Message.Chat.ID,
+	})
 }

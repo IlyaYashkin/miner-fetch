@@ -25,16 +25,18 @@ func NewHttpServer(runner CommonRunner) *HttpServer {
 
 func (h *HttpServer) Start() {
 	go func() {
-		handler := api.NewHandler(h.cfg, h.s)
+		hs := api.NewHandler(h.cfg, h.s)
 
 		mux := http.NewServeMux()
 
-		mux.HandleFunc("GET /api/poll", handler.Poll)
-		mux.HandleFunc("POST /api/telegram-send", handler.TelegramSend)
+		mux.HandleFunc("GET /api/poll", hs.Poll)
+		mux.HandleFunc("POST /api/telegram-send", hs.TelegramSend)
+
+		handler := hs.AuthMiddleware(mux)
 
 		server := &http.Server{
 			Addr:    ":" + h.cfg.Port,
-			Handler: mux,
+			Handler: handler,
 			BaseContext: func(listener net.Listener) context.Context {
 				return h.ctx
 			},

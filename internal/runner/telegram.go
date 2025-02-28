@@ -31,6 +31,8 @@ func (t *TelegramBot) Start() {
 
 		b, err := bot.New(t.cfg.TgAPIKey, opts...)
 
+		t.s.TelegramSender.SetBot(b)
+
 		if err != nil {
 			log.Fatalln(err)
 		}

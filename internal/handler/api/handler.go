@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"miner-fetch/internal/config"
 	"miner-fetch/internal/service"
@@ -40,11 +39,17 @@ func (h *Handler) Poll(w http.ResponseWriter, r *http.Request) {
 	clientChan := h.s.Polling.Subscribe()
 
 	select {
-	case msg := <-clientChan:
-		_, err := fmt.Fprint(w, msg)
+	case payload := <-clientChan:
+		msg, err := json.Marshal(payload)
 		if err != nil {
 			h.s.Logger.Log(err)
 		}
+
+		_, err = w.Write(msg)
+		if err != nil {
+			h.s.Logger.Log(err)
+		}
+
 	case <-time.After(pollTimeout):
 		http.Error(w, "Timeout", http.StatusRequestTimeout)
 	}
@@ -61,11 +66,13 @@ func (h *Handler) TelegramSend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := TelegramSendBody{}
-
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		h.s.Logger.Log(err)
 	}
 
-	fmt.Println(string(body))
+	err = h.s.TelegramSender.SendMessage(r.Context(), resp.ChatID, resp.Sender, resp.Message)
+	if err != nil {
+		h.s.Logger.Log(err)
+	}
 }
