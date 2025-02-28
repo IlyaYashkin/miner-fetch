@@ -49,6 +49,7 @@ func (p *Poller) Start() {
 
 				if err != nil {
 					p.s.Logger.Log(err)
+					time.Sleep(10 * time.Second)
 				}
 
 				if payload.Command != "" {
