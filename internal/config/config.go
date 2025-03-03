@@ -17,6 +17,7 @@ type Config struct {
 	TlsMode          bool     `json:"tls_mode"`
 	CertPath         string   `json:"cert_path"`
 	PrivateKeyPath   string   `json:"private_key_path"`
+	Debug            bool     `json:"debug"`
 }
 
 func GetConfig() Config {
@@ -31,6 +32,7 @@ func GetConfig() Config {
 	tlsMode := getEnv("TLS_MODE", "true")
 	certPath := getEnv("CERT_PATH", "")
 	privateKeyPath := getEnv("PRIVATE_KEY_PATH", "")
+	debug := getEnv("DEBUG", "false")
 
 	return Config{
 		TgAPIKey:         tgApiKey,
@@ -44,6 +46,7 @@ func GetConfig() Config {
 		TlsMode:          tlsMode == "true",
 		CertPath:         certPath,
 		PrivateKeyPath:   privateKeyPath,
+		Debug:            debug == "true",
 	}
 }
 

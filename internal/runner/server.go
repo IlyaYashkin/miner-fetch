@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"miner-fetch/internal/handler/api"
 	"net"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -52,7 +52,8 @@ func (h *HttpServer) Start() {
 			}
 
 			if !errors.Is(err, http.ErrServerClosed) {
-				log.Fatal("http server error: ", err)
+				h.s.Logger.Log(err)
+				os.Exit(1)
 			}
 		}()
 

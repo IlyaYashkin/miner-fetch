@@ -32,7 +32,7 @@ func NewApp() *App {
 	s := &service.Service{
 		Device:         service.NewDevice(),
 		Polling:        service.NewPolling(),
-		Logger:         service.NewLogger(),
+		Logger:         service.NewLogger(cfg.Debug),
 		TelegramSender: service.NewTelegramSender(),
 	}
 
@@ -48,8 +48,6 @@ func NewApp() *App {
 	} else if cfg.Mode == "child" {
 		app.runners = append(app.runners, runner.NewPoller(commonRunner))
 	}
-
-	app.runners = append(app.runners, runner.NewLogger(commonRunner))
 
 	return app
 }

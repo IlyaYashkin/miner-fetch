@@ -1,37 +1,25 @@
 package service
 
 import (
+	"fmt"
 	"log"
+	"runtime/debug"
 )
 
 type Logger struct {
-	ch        chan error
-	isStarted bool
+	debug bool
 }
 
-func NewLogger() *Logger {
+func NewLogger(debug bool) *Logger {
 	return &Logger{
-		ch:        make(chan error, 100),
-		isStarted: false,
+		debug: debug,
 	}
 }
 
 func (l *Logger) Log(msg error) {
-	if l.isStarted {
-		l.ch <- msg
+	if l.debug {
+		msg = fmt.Errorf("%w\nStack trace:\n%s", msg, debug.Stack())
 	}
-}
 
-func (l *Logger) Start() {
-	l.isStarted = true
-
-	for msg := range l.ch {
-		log.Println(msg)
-	}
-}
-
-func (l *Logger) Stop() {
-	l.isStarted = false
-
-	close(l.ch)
+	log.Println(msg)
 }
