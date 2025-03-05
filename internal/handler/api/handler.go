@@ -29,7 +29,7 @@ func NewHandler(cfg config.Config, s *service.Service) *Handler {
 	}
 }
 
-func (h *Handler) Poll(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Poll(w http.ResponseWriter, _ *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
@@ -59,7 +59,7 @@ func (h *Handler) Poll(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 }
 
-func (h *Handler) TelegramSend(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) TelegramSend(_ http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.s.Logger.Log(err)
