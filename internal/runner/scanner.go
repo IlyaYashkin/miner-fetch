@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var period = 10 * time.Second
+var period = 5 * time.Second
 
 type Scanner interface {
 	Scan(ctx context.Context) (map[string]device.Device, error)
@@ -114,8 +114,15 @@ func (d *DeviceScanner) NotifyUsers() {
 	}
 
 	if message != "" {
-		for _, chatId := range d.s.TelegramSender.GetChatIds() {
-			err := d.s.TelegramSender.SendMessage(d.ctx, chatId, d.cfg.NodeName, message)
+		if d.cfg.Mode == "parent" {
+			for _, chatId := range d.s.TelegramSender.GetChatIds() {
+				err := d.s.TelegramSender.SendMessage(d.ctx, chatId, d.cfg.NodeName, message)
+				if err != nil {
+					d.s.Logger.Log(err)
+				}
+			}
+		} else {
+			err := d.s.HttpClient.TelegramSendToAllRequest(d.ctx, d.cfg.NodeName, message)
 			if err != nil {
 				d.s.Logger.Log(err)
 			}

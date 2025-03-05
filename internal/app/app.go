@@ -34,6 +34,7 @@ func NewApp() *App {
 		Polling:        service.NewPolling(),
 		Logger:         service.NewLogger(cfg.Debug),
 		TelegramSender: service.NewTelegramSender(),
+		HttpClient:     service.NewHttpClient(cfg.AuthKey, cfg.ParentAuthority),
 	}
 
 	commonRunner := runner.NewCommonRunner(ctx, s, cfg)

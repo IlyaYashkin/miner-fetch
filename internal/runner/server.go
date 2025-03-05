@@ -31,6 +31,7 @@ func (h *HttpServer) Start() {
 
 		mux.HandleFunc("GET /api/poll", hs.Poll)
 		mux.HandleFunc("POST /api/telegram-send", hs.TelegramSend)
+		mux.HandleFunc("POST /api/telegram-send-to-all", hs.TelegramSendToAll)
 
 		handler := hs.AuthMiddleware(mux)
 

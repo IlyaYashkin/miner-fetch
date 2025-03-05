@@ -9,12 +9,6 @@ import (
 	"time"
 )
 
-type TelegramSendBody struct {
-	ChatID  int64  `json:"chat_id"`
-	Sender  string `json:"sender"`
-	Message string `json:"message"`
-}
-
 var pollTimeout = 30 * time.Second
 
 type Handler struct {
@@ -65,7 +59,7 @@ func (h *Handler) TelegramSend(_ http.ResponseWriter, r *http.Request) {
 		h.s.Logger.Log(err)
 	}
 
-	resp := TelegramSendBody{}
+	resp := service.TelegramSendBody{}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		h.s.Logger.Log(err)
@@ -74,5 +68,25 @@ func (h *Handler) TelegramSend(_ http.ResponseWriter, r *http.Request) {
 	err = h.s.TelegramSender.SendMessage(r.Context(), resp.ChatID, resp.Sender, resp.Message)
 	if err != nil {
 		h.s.Logger.Log(err)
+	}
+}
+
+func (h *Handler) TelegramSendToAll(_ http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		h.s.Logger.Log(err)
+	}
+
+	resp := service.TelegramSendBody{}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		h.s.Logger.Log(err)
+	}
+
+	for _, chatId := range h.s.TelegramSender.GetChatIds() {
+		err = h.s.TelegramSender.SendMessage(r.Context(), chatId, resp.Sender, resp.Message)
+		if err != nil {
+			h.s.Logger.Log(err)
+		}
 	}
 }

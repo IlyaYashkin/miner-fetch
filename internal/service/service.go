@@ -5,4 +5,5 @@ type Service struct {
 	Polling        *Polling
 	Logger         *Logger
 	TelegramSender *TelegramSender
+	HttpClient     *HttpClient
 }
