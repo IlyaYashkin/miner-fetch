@@ -3,8 +3,8 @@ package runner
 import (
 	"context"
 	"github.com/go-telegram/bot"
-	"log"
 	"miner-fetch/internal/handler/telegram"
+	"os"
 )
 
 type TelegramBot struct {
@@ -24,17 +24,20 @@ func (t *TelegramBot) Start() {
 		handler := telegram.NewHandler(t.s, t.cfg)
 
 		opts := []bot.Option{
-			bot.WithMiddlewares(handler.AuthMiddleware),
+			bot.WithMiddlewares(handler.AuthMiddleware, handler.ChatIdSaveMiddleware),
 			bot.WithMessageTextHandler("/start", bot.MatchTypeExact, handler.Start),
-			bot.WithMessageTextHandler("/info", bot.MatchTypeExact, handler.Info),
+			bot.WithDefaultHandler(handler.Default),
 		}
 
 		b, err := bot.New(t.cfg.TgAPIKey, opts...)
-
-		t.s.TelegramSender.SetBot(b)
-
 		if err != nil {
-			log.Fatalln(err)
+			t.s.Logger.Log(err)
+			os.Exit(1)
+		}
+
+		err = t.s.TelegramSender.Init(b)
+		if err != nil {
+			t.s.Logger.Log(err)
 		}
 
 		b.Start(t.ctx)

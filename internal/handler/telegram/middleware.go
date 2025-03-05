@@ -18,3 +18,15 @@ func (h *Handler) AuthMiddleware(next bot.HandlerFunc) bot.HandlerFunc {
 		}
 	}
 }
+
+func (h *Handler) ChatIdSaveMiddleware(next bot.HandlerFunc) bot.HandlerFunc {
+	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		err := h.s.TelegramSender.SaveChatId(update.Message.From.Username, update.Message.Chat.ID)
+		if err != nil {
+			h.s.Logger.Log(err)
+		}
+
+		next(ctx, b, update)
+		return
+	}
+}

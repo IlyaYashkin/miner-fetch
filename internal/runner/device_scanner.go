@@ -2,12 +2,11 @@ package runner
 
 import (
 	"context"
-	"log"
 	"miner-fetch/internal/device"
 	"time"
 )
 
-var period = 5 * time.Minute
+var period = 1 * time.Minute
 
 type DeviceScanner struct {
 	CommonRunner
@@ -29,13 +28,11 @@ func (d *DeviceScanner) Start() {
 
 		scanner := device.GetRustScanScanner()
 
-		log.Println("scanning devices...")
 		devices, err := scanner.Scan(d.ctx)
 		if err != nil {
 			d.s.Logger.Log(err)
 		} else {
 			d.s.Device.SetDevices(devices)
-			log.Println("scanning completed")
 		}
 
 	L:

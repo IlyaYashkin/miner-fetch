@@ -2,10 +2,12 @@ package telegram
 
 import (
 	"context"
+	"errors"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"miner-fetch/internal/config"
 	"miner-fetch/internal/service"
+	"strings"
 )
 
 type Handler struct {
@@ -23,7 +25,9 @@ func NewHandler(s *service.Service, cfg config.Config) *Handler {
 func (h *Handler) Start(ctx context.Context, b *bot.Bot, _ *models.Update) {
 	commands := []models.BotCommand{
 		{Command: "start", Description: "Запустить бота"},
-		{Command: "info", Description: "Получить информацию"},
+		{Command: "status", Description: "Статус"},
+		{Command: "temperature", Description: "Температура"},
+		{Command: "ips", Description: "IP-адреса"},
 	}
 	_, err := b.SetMyCommands(ctx, &bot.SetMyCommandsParams{Commands: commands})
 	if err != nil {
@@ -31,11 +35,21 @@ func (h *Handler) Start(ctx context.Context, b *bot.Bot, _ *models.Update) {
 	}
 }
 
-func (h *Handler) Info(ctx context.Context, _ *bot.Bot, update *models.Update) {
+func (h *Handler) Default(ctx context.Context, _ *bot.Bot, update *models.Update) {
+	if !strings.HasPrefix(update.Message.Text, "/") {
+		return
+	}
+
+	command := strings.TrimLeft(update.Message.Text, "/")
+
 	if h.cfg.IsScanner {
-		text, err := h.s.Device.GetDevicesInfo()
-		if err != nil {
+		text, err := h.s.Device.ExecuteCommand(command)
+		target := &service.CommandNotFoundError{}
+		if err != nil && !errors.As(err, &target) {
 			h.s.Logger.Log(err)
+			return
+		} else if errors.As(err, &target) {
+			text = err.Error()
 		}
 
 		err = h.s.TelegramSender.SendMessage(ctx, update.Message.Chat.ID, h.cfg.NodeName, text)
@@ -45,7 +59,7 @@ func (h *Handler) Info(ctx context.Context, _ *bot.Bot, update *models.Update) {
 	}
 
 	h.s.Polling.Send(service.Payload{
-		Command: "info",
+		Command: command,
 		ChatID:  update.Message.Chat.ID,
 	})
 }

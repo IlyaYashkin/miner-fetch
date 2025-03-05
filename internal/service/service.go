@@ -1,7 +1,7 @@
 package service
 
 type Service struct {
-	Device         *Device
+	Device         *DeviceService
 	Polling        *Polling
 	Logger         *Logger
 	TelegramSender *TelegramSender
