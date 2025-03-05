@@ -14,8 +14,8 @@ func GetRustScanScanner() *RustScanScanner {
 
 type RustScanScanner struct{}
 
-func (r RustScanScanner) Scan(ctx context.Context) ([]Device, error) {
-	var devices []Device
+func (r RustScanScanner) Scan(ctx context.Context) (map[string]Device, error) {
+	devices := make(map[string]Device)
 
 	addresses := "192.168.0.0/24"
 	ports := "4028"
@@ -37,7 +37,9 @@ func (r RustScanScanner) Scan(ctx context.Context) ([]Device, error) {
 			ip := matches[1]
 			ports := strings.Split(matches[2], ",")
 
-			devices = append(devices, Device{IP: ip, Port: ports[0]})
+			device := Device{IP: ip, Port: ports[0]}
+
+			devices[ip] = device
 		}
 	}
 

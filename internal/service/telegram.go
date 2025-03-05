@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"github.com/go-telegram/bot"
 	"os"
+	"sync"
 )
 
 type TelegramSender struct {
 	chats map[string]int64
+	mu    sync.Mutex
 	b     *bot.Bot
 }
 
@@ -28,6 +30,9 @@ func (t *TelegramSender) Init(b *bot.Bot) error {
 }
 
 func (t *TelegramSender) SaveChatId(user string, chatId int64) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	savedChatId, ok := t.chats[user]
 	if ok && savedChatId == chatId {
 		return nil
@@ -40,10 +45,17 @@ func (t *TelegramSender) SaveChatId(user string, chatId int64) error {
 	return err
 }
 
+func (t *TelegramSender) GetChatIds() map[string]int64 {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	return t.chats
+}
+
 func (t *TelegramSender) SendMessage(ctx context.Context, chatID int64, nodeName string, message string) error {
 	params := bot.SendMessageParams{
 		ChatID:    chatID,
-		Text:      fmt.Sprintf("*%s*\n\n%s", nodeName, message),
+		Text:      fmt.Sprintf(" 🔌 *%s*\n\n%s", nodeName, message),
 		ParseMode: "Markdown",
 	}
 

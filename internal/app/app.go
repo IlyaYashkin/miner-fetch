@@ -30,7 +30,7 @@ func NewApp() *App {
 	ctx := context.Background()
 
 	s := &service.Service{
-		Device:         service.NewDevice(),
+		Device:         service.NewDeviceService(),
 		Polling:        service.NewPolling(),
 		Logger:         service.NewLogger(cfg.Debug),
 		TelegramSender: service.NewTelegramSender(),

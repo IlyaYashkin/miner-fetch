@@ -16,12 +16,13 @@ func (e *CommandNotFoundError) Error() string {
 }
 
 type DeviceService struct {
-	mu         sync.Mutex
-	devices    []device.Device
-	commandMap map[string]func() (string, error)
+	mu              sync.Mutex
+	devices         map[string]device.Device
+	previousDevices map[string]device.Device
+	commandMap      map[string]func() (string, error)
 }
 
-func NewDevice() *DeviceService {
+func NewDeviceService() *DeviceService {
 	d := &DeviceService{}
 	d.commandMap = map[string]func() (string, error){
 		"temperature": d.GetTemperature,
@@ -32,18 +33,52 @@ func NewDevice() *DeviceService {
 	return d
 }
 
-func (d *DeviceService) SetDevices(devices []device.Device) {
+func (d *DeviceService) SetDevices(devices map[string]device.Device) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+
+	d.previousDevices = d.devices
 
 	d.devices = devices
 }
 
-func (d *DeviceService) GetDevices() []device.Device {
+func (d *DeviceService) GetDevices() map[string]device.Device {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	return d.devices
+}
+
+func (d *DeviceService) GetOfflineDevices() map[string]device.Device {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	diff := make(map[string]device.Device)
+
+	for k, pd := range d.previousDevices {
+		_, ok := d.devices[k]
+		if !ok {
+			diff[k] = pd
+		}
+	}
+
+	return diff
+}
+
+func (d *DeviceService) GetNewDevices() map[string]device.Device {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	diff := make(map[string]device.Device)
+
+	for k, pd := range d.devices {
+		_, ok := d.previousDevices[k]
+		if !ok {
+			diff[k] = pd
+		}
+	}
+
+	return diff
 }
 
 func (d *DeviceService) ExecuteCommand(command string) (string, error) {
@@ -131,10 +166,12 @@ func (d *DeviceService) GetStatus() (string, error) {
 		}
 
 		message += fmt.Sprintf(
-			"%s \\[%s] %s\n",
+			"%s \\[%s] %s\nHashrate real: %.0f MH/s\nHashrate AVG: %.0f MH/s\n",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
 			util.FormatDuration(statsCommand.Response.Stats[1].Elapsed),
+			statsCommand.Response.Stats[1].Ghs5s,
+			statsCommand.Response.Stats[1].GhsAv,
 		)
 
 		message += "\n"
@@ -146,7 +183,7 @@ func (d *DeviceService) GetStatus() (string, error) {
 func (d *DeviceService) GetIps() (string, error) {
 	var message string
 
-	for i, d := range d.GetDevices() {
+	for _, d := range d.GetDevices() {
 		versionCommand := device.VersionCommand{}
 		err := d.SendCommand(&versionCommand)
 		if err != nil {
@@ -160,14 +197,11 @@ func (d *DeviceService) GetIps() (string, error) {
 		}
 
 		message += fmt.Sprintf(
-			"%d. %s \\[%s] %s\n",
-			i+1,
+			"%s \\[%s] %s\n",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
 			d.IP,
 		)
-
-		message += "\n"
 	}
 
 	return message, nil

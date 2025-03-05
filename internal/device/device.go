@@ -16,6 +16,7 @@ type Command interface {
 type Device struct {
 	IP   string
 	Port string
+	Info string
 }
 
 func (d *Device) SendCommand(command Command) error {
