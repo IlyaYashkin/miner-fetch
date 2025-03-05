@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var period = 5 * time.Second
+var period = 15 * time.Second
 
 type Scanner interface {
 	Scan(ctx context.Context) (map[string]device.Device, error)
