@@ -4,14 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
 	"net/http"
 )
-
-var PollTimeoutError = errors.New("poll timeout")
-var NilResponseError = errors.New("nil response")
 
 type TelegramSendBody struct {
 	ChatID  int64  `json:"chat_id"`
@@ -43,46 +38,14 @@ func NewHttpClient(token string, parentAuthority string) *HttpClient {
 	}
 }
 
-func (h *HttpClient) doRequest(req *http.Request) (*http.Response, error) {
-	resp, err := h.client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if resp == nil {
-		return nil, NilResponseError
-	}
-
-	if resp.StatusCode == http.StatusRequestTimeout {
-		return resp, fmt.Errorf("request timed out")
-	}
-
-	if resp.StatusCode == http.StatusForbidden {
-		return resp, fmt.Errorf("forbidden")
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return resp, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	return resp, err
-}
-
 func (h *HttpClient) PollRequest(ctx context.Context) (Payload, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.parentAuthority+"/api/poll", nil)
 	if err != nil {
 		return Payload{}, err
 	}
 
-	resp, err := h.doRequest(req)
-	if !errors.Is(err, NilResponseError) && err != nil {
-		return Payload{}, err
-	}
-	if !errors.Is(err, NilResponseError) && resp.StatusCode == http.StatusRequestTimeout {
-		return Payload{}, PollTimeoutError
-	}
-	if err != nil {
+	resp, err := h.client.Do(req)
+	if resp == nil || err != nil {
 		return Payload{}, err
 	}
 
@@ -131,7 +94,7 @@ func (h *HttpClient) TelegramSendRequest(
 
 	req.Header.Set("Content-Type", "application/json")
 
-	_, err = h.doRequest(req)
+	_, err = h.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -167,7 +130,7 @@ func (h *HttpClient) TelegramSendToAllRequest(
 
 	req.Header.Set("Content-Type", "application/json")
 
-	_, err = h.doRequest(req)
+	_, err = h.client.Do(req)
 	if err != nil {
 		return err
 	}

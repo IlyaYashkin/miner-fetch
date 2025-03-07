@@ -2,8 +2,6 @@ package runner
 
 import (
 	"context"
-	"errors"
-	"miner-fetch/internal/service"
 	"time"
 )
 
@@ -33,11 +31,8 @@ func (p *Poller) Start() {
 			default:
 				payload, err := p.s.HttpClient.PollRequest(p.ctx)
 
-				if err != nil && !errors.Is(err, service.PollTimeoutError) {
-					p.s.Logger.Log(err)
-				}
-
 				if err != nil {
+					p.s.Logger.Log(err)
 					time.Sleep(pollerSleepOnError)
 				}
 
