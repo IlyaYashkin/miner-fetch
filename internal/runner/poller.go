@@ -2,6 +2,8 @@ package runner
 
 import (
 	"context"
+	"errors"
+	"miner-fetch/internal/service"
 	"time"
 )
 
@@ -38,13 +40,17 @@ func (p *Poller) Start() {
 
 				if payload.Command != "" {
 					message, err := p.s.Device.ExecuteCommand(payload.Command)
+					target := &service.CommandNotFoundError{}
+					if err != nil && !errors.As(err, &target) {
+						p.s.Logger.Log(err)
+						continue
+					} else if errors.As(err, &target) {
+						message = err.Error()
+					}
+
+					err = p.s.HttpClient.TelegramSendRequest(p.ctx, p.cfg.NodeName, payload.ChatID, message)
 					if err != nil {
 						p.s.Logger.Log(err)
-					} else {
-						err := p.s.HttpClient.TelegramSendRequest(p.ctx, p.cfg.NodeName, payload.ChatID, message)
-						if err != nil {
-							p.s.Logger.Log(err)
-						}
 					}
 				}
 

@@ -43,16 +43,16 @@ func (h *Handler) Default(ctx context.Context, _ *bot.Bot, update *models.Update
 	command := strings.TrimLeft(update.Message.Text, "/")
 
 	if h.cfg.IsScanner {
-		text, err := h.s.Device.ExecuteCommand(command)
+		message, err := h.s.Device.ExecuteCommand(command)
 		target := &service.CommandNotFoundError{}
 		if err != nil && !errors.As(err, &target) {
 			h.s.Logger.Log(err)
 			return
 		} else if errors.As(err, &target) {
-			text = err.Error()
+			message = err.Error()
 		}
 
-		err = h.s.TelegramSender.SendMessage(ctx, update.Message.Chat.ID, h.cfg.NodeName, text)
+		err = h.s.TelegramSender.SendMessage(ctx, update.Message.Chat.ID, h.cfg.NodeName, message)
 		if err != nil {
 			h.s.Logger.Log(err)
 		}
