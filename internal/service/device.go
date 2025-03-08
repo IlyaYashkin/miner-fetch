@@ -121,20 +121,20 @@ func (d *DeviceService) GetTemperature() (string, error) {
 
 		message += fmt.Sprintf(
 			"Temp 1 — %d %d\n",
-			statsCommand.Response.Stats[1].Temp1,
-			statsCommand.Response.Stats[1].Temp21,
+			statsCommand.GetStats().Temp1,
+			statsCommand.GetStats().Temp21,
 		)
 
 		message += fmt.Sprintf(
 			"Temp 2 — %d %d\n",
-			statsCommand.Response.Stats[1].Temp2,
-			statsCommand.Response.Stats[1].Temp22,
+			statsCommand.GetStats().Temp2,
+			statsCommand.GetStats().Temp22,
 		)
 
 		message += fmt.Sprintf(
 			"Temp 3 — %d %d\n",
-			statsCommand.Response.Stats[1].Temp3,
-			statsCommand.Response.Stats[1].Temp23,
+			statsCommand.GetStats().Temp3,
+			statsCommand.GetStats().Temp23,
 		)
 
 		message += "\n"
@@ -169,9 +169,9 @@ func (d *DeviceService) GetStatus() (string, error) {
 			"%s [%s] %s\nHashrate real: %.0f MH/s\nHashrate AVG: %.0f MH/s\n",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
-			util.FormatDuration(statsCommand.Response.Stats[1].Elapsed),
-			statsCommand.Response.Stats[1].Ghs5s,
-			statsCommand.Response.Stats[1].GhsAv,
+			util.FormatDuration(statsCommand.GetStats().Elapsed),
+			statsCommand.GetStats().Ghs5s,
+			statsCommand.GetStats().GhsAv,
 		)
 
 		message += "\n"

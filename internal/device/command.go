@@ -36,6 +36,14 @@ func (s *StatsCommand) GetCommand() string {
 	return "stats"
 }
 
+func (s *StatsCommand) GetStats() Stats {
+	if len(s.Response.Stats) >= 2 {
+		return s.Response.Stats[1]
+	}
+
+	return Stats{}
+}
+
 type PoolsCommand struct {
 	Response PoolsResponse
 }

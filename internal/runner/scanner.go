@@ -46,8 +46,6 @@ func (d *DeviceScanner) Start() {
 					continue
 				}
 
-				fmt.Println(devices)
-
 				d.s.Device.SetDevices(devices)
 
 				d.NotifyUsers()
