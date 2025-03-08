@@ -46,6 +46,8 @@ func (d *DeviceScanner) Start() {
 					continue
 				}
 
+				fmt.Println(devices)
+
 				d.s.Device.SetDevices(devices)
 
 				d.NotifyUsers()
@@ -79,7 +81,7 @@ func (d *DeviceScanner) Scan() (map[string]device.Device, error) {
 		}
 
 		info := fmt.Sprintf(
-			"%s \\[%s] %s",
+			"%s [%s] %s",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
 			dev.IP,
@@ -100,14 +102,14 @@ func (d *DeviceScanner) NotifyUsers() {
 	var message string
 
 	if len(offlineDev) > 0 {
-		message += " ❗️*НЕ Работают* ❗️\n\n"
+		message += " ❗️НЕ Работают ❗️\n\n"
 		for _, dev := range offlineDev {
 			message += dev.Info + "\n"
 		}
 	}
 
 	if len(newDev) > 0 {
-		message += " ❗️*Новые* ❗️\n\n"
+		message += " ❗️Новые ❗️\n\n"
 		for _, dev := range newDev {
 			message += dev.Info + "\n"
 		}

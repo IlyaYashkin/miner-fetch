@@ -114,7 +114,7 @@ func (d *DeviceService) GetTemperature() (string, error) {
 		}
 
 		message += fmt.Sprintf(
-			"%s \\[%s]\n",
+			"%s [%s]\n",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
 		)
@@ -166,7 +166,7 @@ func (d *DeviceService) GetStatus() (string, error) {
 		}
 
 		message += fmt.Sprintf(
-			"%s \\[%s] %s\nHashrate real: %.0f MH/s\nHashrate AVG: %.0f MH/s\n",
+			"%s [%s] %s\nHashrate real: %.0f MH/s\nHashrate AVG: %.0f MH/s\n",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
 			util.FormatDuration(statsCommand.Response.Stats[1].Elapsed),
@@ -197,7 +197,7 @@ func (d *DeviceService) GetIps() (string, error) {
 		}
 
 		message += fmt.Sprintf(
-			"%s \\[%s] %s\n",
+			"%s [%s] %s\n",
 			versionCommand.Response.Version[0].Type,
 			poolsCommand.Response.Pools[0].User,
 			d.IP,
